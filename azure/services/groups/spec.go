@@ -19,6 +19,7 @@ package groups
 import (
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2019-05-01/resources"
 	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/pkg/errors"
 	infrav1 "sigs.k8s.io/cluster-api-provider-azure/api/v1alpha4"
 	"sigs.k8s.io/cluster-api-provider-azure/azure/converters"
 )
@@ -50,8 +51,14 @@ func (s *GroupSpec) OwnerResourceName() string {
 // Parameters returns the parameters for the group.
 func (s *GroupSpec) Parameters(existing interface{}) (interface{}, error) {
 	if existing != nil {
-		// rg already exists, nothing to update.
-		return nil, nil
+		existingRG, ok := existing.(resources.Group)
+		if !ok {
+			return nil, errors.Errorf("%v of type %T is not a resources.Group type", existing, existing)
+		}
+
+		if !isAdditionalTagsUpdated(existingRG, s) {
+			return nil, nil
+		}
 	}
 	return resources.Group{
 		Location: to.StringPtr(s.Location),
@@ -63,4 +70,23 @@ func (s *GroupSpec) Parameters(existing interface{}) (interface{}, error) {
 			Additional:  s.AdditionalTags,
 		})),
 	}, nil
+}
+
+func isAdditionalTagsUpdated(existingRG resources.Group, desiredRG *GroupSpec) bool {
+	for tag, tagValue := range desiredRG.AdditionalTags {
+		existingTagValue, tagAlreadyExists := existingRG.Tags[tag]
+		if !tagAlreadyExists {
+			return true
+		}
+
+		if existingTagValue == nil {
+			return true
+		}
+
+		if *existingTagValue != tagValue {
+			return true
+		}
+	}
+
+	return false
 }
