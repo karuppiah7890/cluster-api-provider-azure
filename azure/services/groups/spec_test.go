@@ -10,6 +10,13 @@ import (
 	"sigs.k8s.io/cluster-api-provider-azure/azure/services/groups"
 )
 
+// TODO: Check if we can merge all the tests and table tests into one table test with all the test cases?
+
+// TODO: Reduce verbosity and duplication wherever possible. Check with maintainers for thoughts on this
+
+// TODO: Should we add test cases for reconciliation when there is no change in additionalTags in cluster
+// but external entity has changed tags in resource group but has't changed the owned tag?
+
 func TestParameters(t *testing.T) {
 	t.Run("when resource group already exists and additional tags has been updated in group spec return resource group with updated tags", func(t *testing.T) {
 		t.Parallel()
@@ -25,6 +32,20 @@ func TestParameters(t *testing.T) {
 				existingResourceGroupTags: map[string]*string{
 					"Name": to.StringPtr("test-group"),
 					"sigs.k8s.io_cluster-api-provider-azure_role":                 to.StringPtr("common"),
+					"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": to.StringPtr("owned"),
+				},
+				groupSpecTags: infrav1.Tags{"environment": "dev"},
+				expectedResourceGroupTags: map[string]*string{
+					"Name": to.StringPtr("test-group"),
+					"sigs.k8s.io_cluster-api-provider-azure_role":                 to.StringPtr("common"),
+					"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": to.StringPtr("owned"),
+					"environment": to.StringPtr("dev"),
+				},
+			},
+			{
+				// TODO: Check if this test case is valid
+				name: "new tag with value has been added and existing resource group is missing some managed tags",
+				existingResourceGroupTags: map[string]*string{
 					"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": to.StringPtr("owned"),
 				},
 				groupSpecTags: infrav1.Tags{"environment": "dev"},
@@ -94,9 +115,13 @@ func TestParameters(t *testing.T) {
 					Tags:     testCase.expectedResourceGroupTags,
 				}
 
-				resourceGroup, err := groupSpec.Parameters(existingResourceGroup)
+				rg, err := groupSpec.Parameters(existingResourceGroup)
 
 				g.Expect(err).NotTo(HaveOccurred())
+
+				resourceGroup, ok := rg.(resources.Group)
+
+				g.Expect(ok).To(BeTrue())
 
 				g.Expect(resourceGroup).To(Equal(expectedResourceGroup))
 			})
@@ -140,6 +165,7 @@ func TestParameters(t *testing.T) {
 				groupSpecTags: nil,
 			},
 			{
+				// TODO: Check if this test case is valid or if `environment` tag and value has to be removed
 				name: "no additional tags present in spec with unmanaged tags in existing resource group",
 				existingResourceGroupTags: map[string]*string{
 					"Name": to.StringPtr("test-group"),
@@ -151,6 +177,7 @@ func TestParameters(t *testing.T) {
 				groupSpecTags: infrav1.Tags{},
 			},
 			{
+				// TODO: Check if this test case is valid or if `environment` tag and value has to be removed
 				name: "nil additional tags in spec with unmanaged tags in existing resource group",
 				existingResourceGroupTags: map[string]*string{
 					"Name": to.StringPtr("test-group"),
