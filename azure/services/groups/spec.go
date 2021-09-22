@@ -56,6 +56,10 @@ func (s *GroupSpec) Parameters(existing interface{}) (interface{}, error) {
 			return nil, errors.Errorf("%v of type %T is not a resources.Group type", existing, existing)
 		}
 
+		if !isGroupManaged(existingRG, s.ClusterName) {
+			return nil, nil
+		}
+
 		if !isAdditionalTagsUpdated(existingRG, s) {
 			return nil, nil
 		}
@@ -70,6 +74,11 @@ func (s *GroupSpec) Parameters(existing interface{}) (interface{}, error) {
 			Additional:  s.AdditionalTags,
 		})),
 	}, nil
+}
+
+func isGroupManaged(group resources.Group, clusterName string) bool {
+	tags := converters.MapToTags(group.Tags)
+	return tags.HasOwned(clusterName)
 }
 
 func isAdditionalTagsUpdated(existingRG resources.Group, desiredRG *GroupSpec) bool {

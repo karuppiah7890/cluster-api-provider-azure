@@ -18,6 +18,34 @@ import (
 // but external entity has changed tags in resource group but has't changed the owned tag?
 
 func TestParameters(t *testing.T) {
+	t.Run("when resource group already exists and its not managed then return nil", func(t *testing.T) {
+		t.Parallel()
+		g := NewWithT(t)
+		resourceGroupName := "test-group"
+		resourceGroupLocation := "test-location"
+
+		existingResourceGroup := resources.Group{
+			Name:     to.StringPtr(resourceGroupName),
+			Location: to.StringPtr(resourceGroupLocation),
+			Tags: map[string]*string{
+				"service": to.StringPtr("abc"),
+			},
+		}
+
+		groupSpec := groups.GroupSpec{
+			Name:           resourceGroupName,
+			Location:       resourceGroupLocation,
+			ClusterName:    "test-cluster",
+			AdditionalTags: infrav1.Tags{"environment": "dev", "isForDemo": "yes"},
+		}
+
+		resourceGroup, err := groupSpec.Parameters(existingResourceGroup)
+
+		g.Expect(err).NotTo(HaveOccurred())
+
+		g.Expect(resourceGroup).To(BeNil())
+	})
+
 	t.Run("when resource group already exists and additional tags has been updated in group spec return resource group with updated tags", func(t *testing.T) {
 		t.Parallel()
 
