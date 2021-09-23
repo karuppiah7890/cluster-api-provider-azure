@@ -44,7 +44,7 @@ type azureClient struct {
 
 var _ client = (*azureClient)(nil)
 
-// newClient creates a new VM client from subscription ID.
+// newClient creates a new Resource Group client from subscription ID.
 func newClient(auth azure.Authorizer) *azureClient {
 	c := newGroupsClient(auth.SubscriptionID(), auth.BaseURI(), auth.Authorizer())
 	return &azureClient{

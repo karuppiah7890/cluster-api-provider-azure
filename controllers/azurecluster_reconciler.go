@@ -19,10 +19,12 @@ package controllers
 import (
 	"context"
 
+	"github.com/Azure/azure-sdk-for-go/profiles/latest/resources/mgmt/resources"
 	"github.com/pkg/errors"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha4"
 
 	"sigs.k8s.io/cluster-api-provider-azure/azure"
+	"sigs.k8s.io/cluster-api-provider-azure/azure/converters"
 	"sigs.k8s.io/cluster-api-provider-azure/azure/scope"
 	"sigs.k8s.io/cluster-api-provider-azure/azure/services/bastionhosts"
 	"sigs.k8s.io/cluster-api-provider-azure/azure/services/groups"
@@ -34,6 +36,7 @@ import (
 	"sigs.k8s.io/cluster-api-provider-azure/azure/services/routetables"
 	"sigs.k8s.io/cluster-api-provider-azure/azure/services/securitygroups"
 	"sigs.k8s.io/cluster-api-provider-azure/azure/services/subnets"
+	"sigs.k8s.io/cluster-api-provider-azure/azure/services/tags"
 	"sigs.k8s.io/cluster-api-provider-azure/azure/services/virtualnetworks"
 	"sigs.k8s.io/cluster-api-provider-azure/util/tele"
 )
@@ -52,6 +55,7 @@ type azureClusterService struct {
 	bastionSvc       azure.Reconciler
 	skuCache         *resourceskus.Cache
 	natGatewaySvc    azure.Reconciler
+	tagsSvc          azure.Reconciler
 }
 
 // newAzureClusterService populates all the services based on input scope.
@@ -74,6 +78,7 @@ func newAzureClusterService(scope *scope.ClusterScope) (*azureClusterService, er
 		privateDNSSvc:    privatedns.New(scope),
 		bastionSvc:       bastionhosts.New(scope),
 		skuCache:         skuCache,
+		tagsSvc:          tags.New(scope),
 	}, nil
 }
 
@@ -131,7 +136,49 @@ func (s *azureClusterService) Reconcile(ctx context.Context) error {
 		return errors.Wrap(err, "failed to reconcile bastion")
 	}
 
+	if err := s.reconcileTags(ctx); err != nil {
+		return errors.Wrap(err, "failed to reconcile resource tags")
+	}
+
 	return nil
+}
+
+func (s *azureClusterService) reconcileTags(ctx context.Context) error {
+	// check that the resource group is not BYO.
+	managed, err := s.isResourceGroupManaged(ctx)
+	if err != nil {
+		return errors.Wrap(err, "could not get resource group management state")
+	}
+	if !managed {
+		s.scope.V(2).Info("Should not update resource group tags in unmanaged mode")
+		return azure.ErrNotOwned
+	}
+
+	if err := s.tagsSvc.Reconcile(ctx); err != nil {
+		return errors.Wrap(err, "unable to update tags")
+	}
+
+	return nil
+}
+
+func (s *azureClusterService) isResourceGroupManaged(ctx context.Context) (bool, error) {
+	// group service IsGroupManaged method is not available as we use group service as a azure.Reconciler
+	// which restricts us to only two methods
+
+	// Get resource group client - currently it's a non exported feature in groups package.
+	// Below is duplicated code without telemetry of azure API calls
+	groupsClient := resources.NewGroupsClientWithBaseURI(s.scope.BaseURI(), s.scope.SubscriptionID())
+	azure.SetAutoRestClientDefaults(&groupsClient.Client, s.scope.Authorizer())
+
+	// Get resource group
+	group, err := groupsClient.Get(ctx, s.scope.ResourceGroup())
+	if err != nil {
+		return false, err
+	}
+
+	// check if resource group is managed or not
+	tags := converters.MapToTags(group.Tags)
+	return tags.HasOwned(s.scope.ClusterName()), nil
 }
 
 // Delete reconciles all the services in a predetermined order.

@@ -31,7 +31,7 @@ import (
 // TagScope defines the scope interface for a tags service.
 type TagScope interface {
 	logr.Logger
-	azure.ClusterDescriber
+	azure.Authorizer
 	TagsSpecs() []azure.TagsSpec
 	AnnotationJSON(string) (map[string]interface{}, error)
 	UpdateAnnotationJSON(string, map[string]interface{}) error
@@ -94,7 +94,7 @@ func (s *Service) Reconcile(ctx context.Context) error {
 	return nil
 }
 
-// Delete is a no-op as the tags get deleted as part of VM deletion.
+// Delete is a no-op as the tags get deleted as part of resource deletion.
 func (s *Service) Delete(ctx context.Context) error {
 	_, span := tele.Tracer().Start(ctx, "tags.Service.Delete")
 	defer span.End()
