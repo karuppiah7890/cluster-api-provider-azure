@@ -51,6 +51,7 @@ func (s *GroupSpec) OwnerResourceName() string {
 func (s *GroupSpec) Parameters(existing interface{}) (interface{}, error) {
 	if existing != nil {
 		// rg already exists, nothing to update.
+		// Note that rg tags are updated separately using tags service
 		return nil, nil
 	}
 	return resources.Group{
