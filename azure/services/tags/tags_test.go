@@ -120,6 +120,43 @@ func TestReconcileTags(t *testing.T) {
 			},
 		},
 		{
+			name:          "delete removed tags",
+			expectedError: "",
+			expect: func(s *mock_tags.MockTagScopeMockRecorder, m *mock_tags.MockclientMockRecorder) {
+				s.ClusterName().AnyTimes().Return("test-cluster")
+				s.V(gomock.AssignableToTypeOf(2)).AnyTimes().Return(klogr.New())
+				gomock.InOrder(
+					s.TagsSpecs().Return([]azure.TagsSpec{
+						{
+							Scope: "/sub/123/fake/scope",
+							Tags: map[string]string{
+								"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned",
+								"foo": "bar",
+							},
+							Annotation: "my-annotation",
+						},
+					}),
+					m.GetAtScope(gomockinternal.AContext(), "/sub/123/fake/scope").Return(resources.TagsResource{Properties: &resources.Tags{
+						Tags: map[string]*string{
+							"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": to.StringPtr("owned"),
+							"foo":   to.StringPtr("bar"),
+							"thing": to.StringPtr("stuff"),
+						},
+					}}, nil),
+					s.AnnotationJSON("my-annotation").Return(map[string]interface{}{"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned", "foo": "bar", "thing": "stuff"}, nil),
+					m.CreateOrUpdateAtScope(gomockinternal.AContext(), "/sub/123/fake/scope", resources.TagsResource{
+						Properties: &resources.Tags{
+							Tags: map[string]*string{
+								"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": to.StringPtr("owned"),
+								"foo": to.StringPtr("bar"),
+							},
+						},
+					}),
+					s.UpdateAnnotationJSON("my-annotation", map[string]interface{}{"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned", "foo": "bar"}),
+				)
+			},
+		},
+		{
 			name:          "error getting existing tags",
 			expectedError: "failed to get existing tags: #: Internal Server Error: StatusCode=500",
 			expect: func(s *mock_tags.MockTagScopeMockRecorder, m *mock_tags.MockclientMockRecorder) {
