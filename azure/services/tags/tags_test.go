@@ -40,66 +40,102 @@ func TestReconcileTags(t *testing.T) {
 		expectedError string
 	}{
 		{
-			name:          "create tags",
+			name:          "create tags for managed resources",
 			expectedError: "",
 			expect: func(s *mock_tags.MockTagScopeMockRecorder, m *mock_tags.MockclientMockRecorder) {
+				s.ClusterName().AnyTimes().Return("test-cluster")
+				s.V(gomock.AssignableToTypeOf(2)).AnyTimes().Return(klogr.New())
+				gomock.InOrder(
+					s.TagsSpecs().Return([]azure.TagsSpec{
+						{
+							Scope: "/sub/123/fake/scope",
+							Tags: map[string]string{
+								"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned",
+								"foo":   "bar",
+								"thing": "stuff",
+							},
+							Annotation: "my-annotation",
+						},
+						{
+							Scope: "/sub/123/other/scope",
+							Tags: map[string]string{
+								"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned",
+								"tag1": "value1",
+							},
+							Annotation: "my-annotation-2",
+						},
+					}),
+					m.GetAtScope(gomockinternal.AContext(), "/sub/123/fake/scope").Return(resources.TagsResource{Properties: &resources.Tags{
+						Tags: map[string]*string{
+							"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": to.StringPtr("owned"),
+						},
+					}}, nil),
+					s.AnnotationJSON("my-annotation"),
+					m.CreateOrUpdateAtScope(gomockinternal.AContext(), "/sub/123/fake/scope", resources.TagsResource{
+						Properties: &resources.Tags{
+							Tags: map[string]*string{
+								"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": to.StringPtr("owned"),
+								"foo":   to.StringPtr("bar"),
+								"thing": to.StringPtr("stuff"),
+							},
+						},
+					}),
+					s.UpdateAnnotationJSON("my-annotation", map[string]interface{}{"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned", "foo": "bar", "thing": "stuff"}),
+					m.GetAtScope(gomockinternal.AContext(), "/sub/123/other/scope").Return(resources.TagsResource{Properties: &resources.Tags{
+						Tags: map[string]*string{
+							"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": to.StringPtr("owned"),
+						},
+					}}, nil),
+					s.AnnotationJSON("my-annotation-2"),
+					m.CreateOrUpdateAtScope(gomockinternal.AContext(), "/sub/123/other/scope", resources.TagsResource{
+						Properties: &resources.Tags{
+							Tags: map[string]*string{
+								"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": to.StringPtr("owned"),
+								"tag1": to.StringPtr("value1"),
+							},
+						},
+					}),
+					s.UpdateAnnotationJSON("my-annotation-2", map[string]interface{}{"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned", "tag1": "value1"}),
+				)
+			},
+		},
+		{
+			name:          "do not create tags for unmanaged resources",
+			expectedError: "",
+			expect: func(s *mock_tags.MockTagScopeMockRecorder, m *mock_tags.MockclientMockRecorder) {
+				s.ClusterName().AnyTimes().Return("test-cluster")
 				s.V(gomock.AssignableToTypeOf(2)).AnyTimes().Return(klogr.New())
 				s.TagsSpecs().Return([]azure.TagsSpec{
 					{
 						Scope: "/sub/123/fake/scope",
 						Tags: map[string]string{
+							"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned",
 							"foo":   "bar",
 							"thing": "stuff",
 						},
 						Annotation: "my-annotation",
 					},
-					{
-						Scope: "/sub/123/other/scope",
-						Tags: map[string]string{
-							"tag1": "value1",
-						},
-						Annotation: "my-annotation-2",
-					},
 				})
 				m.GetAtScope(gomockinternal.AContext(), "/sub/123/fake/scope").Return(resources.TagsResource{}, nil)
-				s.AnnotationJSON("my-annotation")
-				m.CreateOrUpdateAtScope(gomockinternal.AContext(), "/sub/123/fake/scope", resources.TagsResource{
-					Properties: &resources.Tags{
-						Tags: map[string]*string{
-							"foo":   to.StringPtr("bar"),
-							"thing": to.StringPtr("stuff"),
-						},
-					},
-				})
-				s.UpdateAnnotationJSON("my-annotation", map[string]interface{}{"foo": "bar", "thing": "stuff"})
-				m.GetAtScope(gomockinternal.AContext(), "/sub/123/other/scope").Return(resources.TagsResource{}, nil)
-				s.AnnotationJSON("my-annotation-2")
-				m.CreateOrUpdateAtScope(gomockinternal.AContext(), "/sub/123/other/scope", resources.TagsResource{
-					Properties: &resources.Tags{
-						Tags: map[string]*string{
-							"tag1": to.StringPtr("value1"),
-						},
-					},
-				})
-				s.UpdateAnnotationJSON("my-annotation-2", map[string]interface{}{"tag1": "value1"})
 			},
 		},
 		{
 			name:          "error getting existing tags",
 			expectedError: "failed to get existing tags: #: Internal Server Error: StatusCode=500",
 			expect: func(s *mock_tags.MockTagScopeMockRecorder, m *mock_tags.MockclientMockRecorder) {
+				s.ClusterName().AnyTimes().Return("test-cluster")
 				s.V(gomock.AssignableToTypeOf(2)).AnyTimes().Return(klogr.New())
 				s.TagsSpecs().Return([]azure.TagsSpec{
 					{
 						Scope: "/sub/123/fake/scope",
 						Tags: map[string]string{
+							"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned",
 							"foo":   "bar",
 							"thing": "stuff",
 						},
 						Annotation: "my-annotation",
 					},
 				})
-				s.AnnotationJSON("my-annotation")
 				m.GetAtScope(gomockinternal.AContext(), "/sub/123/fake/scope").Return(resources.TagsResource{}, autorest.NewErrorWithResponse("", "", &http.Response{StatusCode: 500}, "Internal Server Error"))
 			},
 		},
@@ -107,21 +143,28 @@ func TestReconcileTags(t *testing.T) {
 			name:          "error updating tags",
 			expectedError: "cannot update tags: #: Internal Server Error: StatusCode=500",
 			expect: func(s *mock_tags.MockTagScopeMockRecorder, m *mock_tags.MockclientMockRecorder) {
+				s.ClusterName().AnyTimes().Return("test-cluster")
 				s.V(gomock.AssignableToTypeOf(2)).AnyTimes().Return(klogr.New())
 				s.TagsSpecs().Return([]azure.TagsSpec{
 					{
 						Scope: "/sub/123/fake/scope",
 						Tags: map[string]string{
+							"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned",
 							"key": "value",
 						},
 						Annotation: "my-annotation",
 					},
 				})
-				m.GetAtScope(gomockinternal.AContext(), "/sub/123/fake/scope").Return(resources.TagsResource{}, nil)
+				m.GetAtScope(gomockinternal.AContext(), "/sub/123/fake/scope").Return(resources.TagsResource{Properties: &resources.Tags{
+					Tags: map[string]*string{
+						"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": to.StringPtr("owned"),
+					},
+				}}, nil)
 				s.AnnotationJSON("my-annotation")
 				m.CreateOrUpdateAtScope(gomockinternal.AContext(), "/sub/123/fake/scope", resources.TagsResource{
 					Properties: &resources.Tags{
 						Tags: map[string]*string{
+							"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": to.StringPtr("owned"),
 							"key": to.StringPtr("value"),
 						},
 					},
@@ -132,17 +175,25 @@ func TestReconcileTags(t *testing.T) {
 			name:          "tags unchanged",
 			expectedError: "",
 			expect: func(s *mock_tags.MockTagScopeMockRecorder, m *mock_tags.MockclientMockRecorder) {
+				s.ClusterName().AnyTimes().Return("test-cluster")
 				s.V(gomock.AssignableToTypeOf(2)).AnyTimes().Return(klogr.New())
 				s.TagsSpecs().Return([]azure.TagsSpec{
 					{
 						Scope: "/sub/123/fake/scope",
 						Tags: map[string]string{
+							"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned",
 							"key": "value",
 						},
 						Annotation: "my-annotation",
 					},
 				})
-				s.AnnotationJSON("my-annotation").Return(map[string]interface{}{"key": "value"}, nil)
+				m.GetAtScope(gomockinternal.AContext(), "/sub/123/fake/scope").Return(resources.TagsResource{Properties: &resources.Tags{
+					Tags: map[string]*string{
+						"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": to.StringPtr("owned"),
+						"key": to.StringPtr("value"),
+					},
+				}}, nil)
+				s.AnnotationJSON("my-annotation").Return(map[string]interface{}{"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned", "key": "value"}, nil)
 			},
 		},
 	}

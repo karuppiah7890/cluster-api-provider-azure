@@ -25,6 +25,7 @@ import (
 	"github.com/pkg/errors"
 
 	"sigs.k8s.io/cluster-api-provider-azure/azure"
+	"sigs.k8s.io/cluster-api-provider-azure/azure/converters"
 	"sigs.k8s.io/cluster-api-provider-azure/util/tele"
 )
 
@@ -57,6 +58,20 @@ func (s *Service) Reconcile(ctx context.Context) error {
 	defer done()
 
 	for _, tagsSpec := range s.Scope.TagsSpecs() {
+		existingTags, err := s.client.GetAtScope(ctx, tagsSpec.Scope)
+		if err != nil {
+			return errors.Wrap(err, "failed to get existing tags")
+		}
+		tags := make(map[string]*string)
+		if existingTags.Properties != nil && existingTags.Properties.Tags != nil {
+			tags = existingTags.Properties.Tags
+		}
+
+		if !s.isResourceManaged(tags) {
+			s.Scope.V(4).Info("Skipping tags reconcile for not managed resource")
+			continue
+		}
+
 		annotation, err := s.Scope.AnnotationJSON(tagsSpec.Annotation)
 		if err != nil {
 			return err
@@ -64,14 +79,6 @@ func (s *Service) Reconcile(ctx context.Context) error {
 		changed, created, deleted, newAnnotation := tagsChanged(annotation, tagsSpec.Tags)
 		if changed {
 			s.Scope.V(2).Info("Updating tags")
-			result, err := s.client.GetAtScope(ctx, tagsSpec.Scope)
-			if err != nil {
-				return errors.Wrap(err, "failed to get existing tags")
-			}
-			tags := make(map[string]*string)
-			if result.Properties != nil && result.Properties.Tags != nil {
-				tags = result.Properties.Tags
-			}
 			for k, v := range created {
 				tags[k] = to.StringPtr(v)
 			}
@@ -92,6 +99,10 @@ func (s *Service) Reconcile(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+func (s *Service) isResourceManaged(tags map[string]*string) bool {
+	return converters.MapToTags(tags).HasOwned(s.Scope.ClusterName())
 }
 
 // Delete is a no-op as the tags get deleted as part of VM deletion.
