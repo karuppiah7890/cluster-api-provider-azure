@@ -79,16 +79,26 @@ func (s *Service) Reconcile(ctx context.Context) error {
 		changed, created, deleted, newAnnotation := tagsChanged(annotation, tagsSpec.Tags)
 		if changed {
 			s.Scope.V(2).Info("Updating tags")
-			for k, v := range created {
-				tags[k] = to.StringPtr(v)
+			if len(created) > 0 {
+				createdTags := make(map[string]*string)
+				for k, v := range created {
+					createdTags[k] = to.StringPtr(v)
+				}
+
+				if _, err := s.client.UpdateAtScope(ctx, tagsSpec.Scope, resources.TagsPatchResource{Operation: "Merge", Properties: &resources.Tags{Tags: createdTags}}); err != nil {
+					return errors.Wrap(err, "cannot update tags")
+				}
 			}
 
-			for k := range deleted {
-				delete(tags, k)
-			}
+			if len(deleted) > 0 {
+				deletedTags := make(map[string]*string)
+				for k, v := range deleted {
+					deletedTags[k] = to.StringPtr(v)
+				}
 
-			if _, err := s.client.CreateOrUpdateAtScope(ctx, tagsSpec.Scope, resources.TagsResource{Properties: &resources.Tags{Tags: tags}}); err != nil {
-				return errors.Wrap(err, "cannot update tags")
+				if _, err := s.client.UpdateAtScope(ctx, tagsSpec.Scope, resources.TagsPatchResource{Operation: "Delete", Properties: &resources.Tags{Tags: deletedTags}}); err != nil {
+					return errors.Wrap(err, "cannot update tags")
+				}
 			}
 
 			// We also need to update the annotation if anything changed.

@@ -71,7 +71,8 @@ func TestReconcileTags(t *testing.T) {
 						},
 					}}, nil),
 					s.AnnotationJSON("my-annotation"),
-					m.CreateOrUpdateAtScope(gomockinternal.AContext(), "/sub/123/fake/scope", resources.TagsResource{
+					m.UpdateAtScope(gomockinternal.AContext(), "/sub/123/fake/scope", resources.TagsPatchResource{
+						Operation: "Merge",
 						Properties: &resources.Tags{
 							Tags: map[string]*string{
 								"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": to.StringPtr("owned"),
@@ -87,7 +88,8 @@ func TestReconcileTags(t *testing.T) {
 						},
 					}}, nil),
 					s.AnnotationJSON("my-annotation-2"),
-					m.CreateOrUpdateAtScope(gomockinternal.AContext(), "/sub/123/other/scope", resources.TagsResource{
+					m.UpdateAtScope(gomockinternal.AContext(), "/sub/123/other/scope", resources.TagsPatchResource{
+						Operation: "Merge",
 						Properties: &resources.Tags{
 							Tags: map[string]*string{
 								"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": to.StringPtr("owned"),
@@ -144,11 +146,11 @@ func TestReconcileTags(t *testing.T) {
 						},
 					}}, nil),
 					s.AnnotationJSON("my-annotation").Return(map[string]interface{}{"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned", "foo": "bar", "thing": "stuff"}, nil),
-					m.CreateOrUpdateAtScope(gomockinternal.AContext(), "/sub/123/fake/scope", resources.TagsResource{
+					m.UpdateAtScope(gomockinternal.AContext(), "/sub/123/fake/scope", resources.TagsPatchResource{
+						Operation: "Delete",
 						Properties: &resources.Tags{
 							Tags: map[string]*string{
-								"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": to.StringPtr("owned"),
-								"foo": to.StringPtr("bar"),
+								"thing": to.StringPtr("stuff"),
 							},
 						},
 					}),
@@ -198,7 +200,8 @@ func TestReconcileTags(t *testing.T) {
 					},
 				}}, nil)
 				s.AnnotationJSON("my-annotation")
-				m.CreateOrUpdateAtScope(gomockinternal.AContext(), "/sub/123/fake/scope", resources.TagsResource{
+				m.UpdateAtScope(gomockinternal.AContext(), "/sub/123/fake/scope", resources.TagsPatchResource{
+					Operation: "Merge",
 					Properties: &resources.Tags{
 						Tags: map[string]*string{
 							"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": to.StringPtr("owned"),
