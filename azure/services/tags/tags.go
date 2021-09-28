@@ -32,7 +32,8 @@ import (
 // TagScope defines the scope interface for a tags service.
 type TagScope interface {
 	logr.Logger
-	azure.ClusterDescriber
+	azure.Authorizer
+	ClusterName() string
 	TagsSpecs() []azure.TagsSpec
 	AnnotationJSON(string) (map[string]interface{}, error)
 	UpdateAnnotationJSON(string, map[string]interface{}) error
