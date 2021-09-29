@@ -77,16 +77,16 @@ func (s *Service) Reconcile(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		changed, created, deleted, newAnnotation := tagsChanged(annotation, tagsSpec.Tags)
+		changed, createdOrUpdated, deleted, newAnnotation := tagsChanged(annotation, tagsSpec.Tags)
 		if changed {
 			s.Scope.V(2).Info("Updating tags")
-			if len(created) > 0 {
-				createdTags := make(map[string]*string)
-				for k, v := range created {
-					createdTags[k] = to.StringPtr(v)
+			if len(createdOrUpdated) > 0 {
+				createdOrUpdatedTags := make(map[string]*string)
+				for k, v := range createdOrUpdated {
+					createdOrUpdatedTags[k] = to.StringPtr(v)
 				}
 
-				if _, err := s.client.UpdateAtScope(ctx, tagsSpec.Scope, resources.TagsPatchResource{Operation: "Merge", Properties: &resources.Tags{Tags: createdTags}}); err != nil {
+				if _, err := s.client.UpdateAtScope(ctx, tagsSpec.Scope, resources.TagsPatchResource{Operation: "Merge", Properties: &resources.Tags{Tags: createdOrUpdatedTags}}); err != nil {
 					return errors.Wrap(err, "cannot update tags")
 				}
 			}
@@ -130,7 +130,7 @@ func tagsChanged(annotation map[string]interface{}, src map[string]string) (bool
 	changed := false
 
 	// Tracking for created/updated
-	created := map[string]string{}
+	createdOrUpdated := map[string]string{}
 
 	// Tracking for tags that were deleted.
 	deleted := map[string]string{}
@@ -170,7 +170,7 @@ func tagsChanged(annotation map[string]interface{}, src map[string]string) (bool
 
 		// Entry isn't in annotation, it's new.
 		if !ok {
-			created[t] = v
+			createdOrUpdated[t] = v
 			newAnnotation[t] = v
 			changed = true
 			continue
@@ -178,7 +178,7 @@ func tagsChanged(annotation map[string]interface{}, src map[string]string) (bool
 
 		// Entry is in annotation, has the value changed?
 		if v != av {
-			created[t] = v
+			createdOrUpdated[t] = v
 			changed = true
 		}
 
@@ -188,5 +188,5 @@ func tagsChanged(annotation map[string]interface{}, src map[string]string) (bool
 
 	// We made it through the loop, and everything that was in src, was also
 	// in dst. Nothing changed.
-	return changed, created, deleted, newAnnotation
+	return changed, createdOrUpdated, deleted, newAnnotation
 }
