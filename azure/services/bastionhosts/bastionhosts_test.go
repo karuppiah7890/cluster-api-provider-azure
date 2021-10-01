@@ -123,7 +123,7 @@ func TestReconcileBastionHosts(t *testing.T) {
 				gomock.InOrder(
 					mSubnet.Get(gomockinternal.AContext(), "my-rg", "my-vnet", "my-subnet").Return(network.Subnet{}, nil),
 					mPublicIP.Get(gomockinternal.AContext(), "my-rg", "my-publicip").Return(network.PublicIPAddress{}, autorest.NewErrorWithResponse("", "", &http.Response{StatusCode: 404}, "Not found")),
-					mPublicIP.CreateOrUpdate(gomockinternal.AContext(), "my-rg", "my-publicip", gomock.AssignableToTypeOf(network.PublicIPAddress{})).Return(autorest.NewErrorWithResponse("", "", &http.Response{StatusCode: 500}, "Internal Server Error")),
+					// mPublicIP.CreateOrUpdate(gomockinternal.AContext(), "my-rg", "my-publicip", gomock.AssignableToTypeOf(network.PublicIPAddress{})).Return(autorest.NewErrorWithResponse("", "", &http.Response{StatusCode: 500}, "Internal Server Error")),
 				)
 			},
 		},
@@ -149,7 +149,7 @@ func TestReconcileBastionHosts(t *testing.T) {
 				s.Location().AnyTimes().Return("fake-location")
 				mSubnet.Get(gomockinternal.AContext(), "my-rg", "my-vnet", "my-subnet").Return(network.Subnet{}, nil)
 				mPublicIP.Get(gomockinternal.AContext(), "my-rg", "my-publicip").Return(network.PublicIPAddress{}, autorest.NewErrorWithResponse("", "", &http.Response{StatusCode: 404}, "Not found"))
-				mPublicIP.CreateOrUpdate(gomockinternal.AContext(), "my-rg", "my-publicip", gomock.AssignableToTypeOf(network.PublicIPAddress{})).Return(nil)
+				// mPublicIP.CreateOrUpdate(gomockinternal.AContext(), "my-rg", "my-publicip", gomock.AssignableToTypeOf(network.PublicIPAddress{})).Return(nil)
 				mPublicIP.Get(gomockinternal.AContext(), "my-rg", "my-publicip").Return(network.PublicIPAddress{}, autorest.NewErrorWithResponse("", "", &http.Response{StatusCode: 500}, "Internal Server Error"))
 			},
 		},
@@ -177,7 +177,7 @@ func TestReconcileBastionHosts(t *testing.T) {
 				gomock.InOrder(
 					mSubnet.Get(gomockinternal.AContext(), "my-rg", "my-vnet", "my-subnet").Return(network.Subnet{}, nil),
 					mPublicIP.Get(gomockinternal.AContext(), "my-rg", "my-publicip").Return(network.PublicIPAddress{}, autorest.NewErrorWithResponse("", "", &http.Response{StatusCode: 404}, "Not found")),
-					mPublicIP.CreateOrUpdate(gomockinternal.AContext(), "my-rg", "my-publicip", gomock.AssignableToTypeOf(network.PublicIPAddress{})).Return(nil),
+					// mPublicIP.CreateOrUpdate(gomockinternal.AContext(), "my-rg", "my-publicip", gomock.AssignableToTypeOf(network.PublicIPAddress{})).Return(nil),
 					mPublicIP.Get(gomockinternal.AContext(), "my-rg", "my-publicip").Return(network.PublicIPAddress{}, nil),
 					m.CreateOrUpdate(gomockinternal.AContext(), "my-rg", "my-bastion", gomock.AssignableToTypeOf(network.BastionHost{})),
 				)
