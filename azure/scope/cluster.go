@@ -833,6 +833,7 @@ func (s *ClusterScope) SetAnnotation(key, value string) {
 	s.AzureCluster.Annotations[key] = value
 }
 
+// TagsSpecs returns the tag specs for the AzureCluster.
 func (s *ClusterScope) TagsSpecs() []azure.TagsSpec {
 	return []azure.TagsSpec{
 		{

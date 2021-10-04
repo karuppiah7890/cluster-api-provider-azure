@@ -660,6 +660,7 @@ func (s *ManagedControlPlaneScope) SetAnnotation(key, value string) {
 	s.ControlPlane.Annotations[key] = value
 }
 
+// TagsSpecs returns the tag specs for the ManagedControlPlane.
 func (s *ManagedControlPlaneScope) TagsSpecs() []azure.TagsSpec {
 	return []azure.TagsSpec{
 		{
