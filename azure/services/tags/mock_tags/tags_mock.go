@@ -96,20 +96,6 @@ func (mr *MockTagScopeMockRecorder) Authorizer() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Authorizer", reflect.TypeOf((*MockTagScope)(nil).Authorizer))
 }
 
-// AvailabilitySetEnabled mocks base method.
-func (m *MockTagScope) AvailabilitySetEnabled() bool {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AvailabilitySetEnabled")
-	ret0, _ := ret[0].(bool)
-	return ret0
-}
-
-// AvailabilitySetEnabled indicates an expected call of AvailabilitySetEnabled.
-func (mr *MockTagScopeMockRecorder) AvailabilitySetEnabled() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AvailabilitySetEnabled", reflect.TypeOf((*MockTagScope)(nil).AvailabilitySetEnabled))
-}
-
 // BaseURI mocks base method.
 func (m *MockTagScope) BaseURI() string {
 	m.ctrl.T.Helper()
@@ -225,20 +211,6 @@ func (mr *MockTagScopeMockRecorder) Error(err, msg interface{}, keysAndValues ..
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Error", reflect.TypeOf((*MockTagScope)(nil).Error), varargs...)
 }
 
-// FailureDomains mocks base method.
-func (m *MockTagScope) FailureDomains() []string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FailureDomains")
-	ret0, _ := ret[0].([]string)
-	return ret0
-}
-
-// FailureDomains indicates an expected call of FailureDomains.
-func (mr *MockTagScopeMockRecorder) FailureDomains() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FailureDomains", reflect.TypeOf((*MockTagScope)(nil).FailureDomains))
-}
-
 // HashKey mocks base method.
 func (m *MockTagScope) HashKey() string {
 	m.ctrl.T.Helper()
@@ -268,34 +240,6 @@ func (mr *MockTagScopeMockRecorder) Info(msg interface{}, keysAndValues ...inter
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{msg}, keysAndValues...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*MockTagScope)(nil).Info), varargs...)
-}
-
-// Location mocks base method.
-func (m *MockTagScope) Location() string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Location")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// Location indicates an expected call of Location.
-func (mr *MockTagScopeMockRecorder) Location() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Location", reflect.TypeOf((*MockTagScope)(nil).Location))
-}
-
-// ResourceGroup mocks base method.
-func (m *MockTagScope) ResourceGroup() string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ResourceGroup")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// ResourceGroup indicates an expected call of ResourceGroup.
-func (mr *MockTagScopeMockRecorder) ResourceGroup() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResourceGroup", reflect.TypeOf((*MockTagScope)(nil).ResourceGroup))
 }
 
 // SubscriptionID mocks base method.
