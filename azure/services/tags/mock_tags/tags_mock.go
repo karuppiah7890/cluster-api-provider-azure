@@ -26,7 +26,6 @@ import (
 	autorest "github.com/Azure/go-autorest/autorest"
 	logr "github.com/go-logr/logr"
 	gomock "github.com/golang/mock/gomock"
-	v1beta1 "sigs.k8s.io/cluster-api-provider-azure/api/v1beta1"
 	azure "sigs.k8s.io/cluster-api-provider-azure/azure"
 )
 
@@ -51,20 +50,6 @@ func NewMockTagScope(ctrl *gomock.Controller) *MockTagScope {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockTagScope) EXPECT() *MockTagScopeMockRecorder {
 	return m.recorder
-}
-
-// AdditionalTags mocks base method.
-func (m *MockTagScope) AdditionalTags() v1beta1.Tags {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AdditionalTags")
-	ret0, _ := ret[0].(v1beta1.Tags)
-	return ret0
-}
-
-// AdditionalTags indicates an expected call of AdditionalTags.
-func (mr *MockTagScopeMockRecorder) AdditionalTags() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdditionalTags", reflect.TypeOf((*MockTagScope)(nil).AdditionalTags))
 }
 
 // AnnotationJSON mocks base method.
@@ -150,20 +135,6 @@ func (m *MockTagScope) CloudEnvironment() string {
 func (mr *MockTagScopeMockRecorder) CloudEnvironment() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudEnvironment", reflect.TypeOf((*MockTagScope)(nil).CloudEnvironment))
-}
-
-// CloudProviderConfigOverrides mocks base method.
-func (m *MockTagScope) CloudProviderConfigOverrides() *v1beta1.CloudProviderConfigOverrides {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CloudProviderConfigOverrides")
-	ret0, _ := ret[0].(*v1beta1.CloudProviderConfigOverrides)
-	return ret0
-}
-
-// CloudProviderConfigOverrides indicates an expected call of CloudProviderConfigOverrides.
-func (mr *MockTagScopeMockRecorder) CloudProviderConfigOverrides() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudProviderConfigOverrides", reflect.TypeOf((*MockTagScope)(nil).CloudProviderConfigOverrides))
 }
 
 // ClusterName mocks base method.
