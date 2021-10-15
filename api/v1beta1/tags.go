@@ -136,6 +136,15 @@ const (
 	// See https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
 	// for annotation formatting rules.
 	VMTagsLastAppliedAnnotation = "sigs.k8s.io/cluster-api-provider-azure-last-applied-tags-vm"
+
+	// TODO(karuppiah7890): Check if this is the right place to define RGTagsLastAppliedAnnotation constant.
+	// And if it needs to be defined elsewhere too, like v1alpha3, v1alpha4 packages
+
+	// RGTagsLastAppliedAnnotation is the key for the Azure Cluster object annotation
+	// which tracks the AdditionalTags for Resource Group which is part in the Azure Cluster.
+	// See https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+	// for annotation formatting rules.
+	RGTagsLastAppliedAnnotation = "sigs.k8s.io/cluster-api-provider-azure-last-applied-tags-rg"
 )
 
 // SpecVersionHashTagKey is the key for the spec version hash used to enable quick spec difference comparison.
