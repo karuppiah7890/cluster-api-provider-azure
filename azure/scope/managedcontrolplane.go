@@ -25,7 +25,6 @@ import (
 	"strings"
 
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -664,14 +663,8 @@ func (s *ManagedControlPlaneScope) SetAnnotation(key, value string) {
 func (s *ManagedControlPlaneScope) TagsSpecs() []azure.TagsSpec {
 	return []azure.TagsSpec{
 		{
-			Scope: azure.ResourceGroupID(s.SubscriptionID(), s.ResourceGroup()),
-			Tags: infrav1.Build(infrav1.BuildParams{
-				ClusterName: s.ClusterName(),
-				Lifecycle:   infrav1.ResourceLifecycleOwned,
-				Name:        to.StringPtr(s.ResourceGroup()),
-				Role:        to.StringPtr(infrav1.CommonRole),
-				Additional:  s.AdditionalTags(),
-			}),
+			Scope:      azure.ResourceGroupID(s.SubscriptionID(), s.ResourceGroup()),
+			Tags:       s.AdditionalTags(),
 			Annotation: infrav1.RGTagsLastAppliedAnnotation,
 		},
 	}

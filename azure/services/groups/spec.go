@@ -61,7 +61,6 @@ func (s *GroupSpec) Parameters(existing interface{}) (interface{}, error) {
 			Lifecycle:   infrav1.ResourceLifecycleOwned,
 			Name:        to.StringPtr(s.Name),
 			Role:        to.StringPtr(infrav1.CommonRole),
-			Additional:  s.AdditionalTags,
 		})),
 	}, nil
 }

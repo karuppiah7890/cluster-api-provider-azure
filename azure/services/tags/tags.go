@@ -73,11 +73,11 @@ func (s *Service) Reconcile(ctx context.Context) error {
 			continue
 		}
 
-		annotation, err := s.Scope.AnnotationJSON(tagsSpec.Annotation)
+		lastAppliedTags, err := s.Scope.AnnotationJSON(tagsSpec.Annotation)
 		if err != nil {
 			return err
 		}
-		changed, createdOrUpdated, deleted, newAnnotation := tagsChanged(annotation, tagsSpec.Tags)
+		changed, createdOrUpdated, deleted, newAnnotation := tagsChanged(lastAppliedTags, tagsSpec.Tags, tags)
 		if changed {
 			s.Scope.V(2).Info("Updating tags")
 			if len(createdOrUpdated) > 0 {
@@ -125,7 +125,7 @@ func (s *Service) Delete(ctx context.Context) error {
 }
 
 // tagsChanged determines which tags to delete and which to add.
-func tagsChanged(annotation map[string]interface{}, src map[string]string) (bool, map[string]string, map[string]string, map[string]interface{}) {
+func tagsChanged(lastAppliedTags map[string]interface{}, desiredTags map[string]string, currentTags map[string]*string) (bool, map[string]string, map[string]string, map[string]interface{}) {
 	// Bool tracking if we found any changed state.
 	changed := false
 
@@ -138,13 +138,13 @@ func tagsChanged(annotation map[string]interface{}, src map[string]string) (bool
 	// The new annotation that we need to set if anything is created/updated.
 	newAnnotation := map[string]interface{}{}
 
-	// Loop over annotation, checking if entries are in src.
-	// If an entry is present in annotation but not src, it has been deleted
+	// Loop over lastAppliedTags, checking if entries are in desiredTags.
+	// If an entry is present in lastAppliedTags but not in desiredTags, it has been deleted
 	// since last time. We flag this in the deleted map.
-	for t, v := range annotation {
-		_, ok := src[t]
+	for t, v := range lastAppliedTags {
+		_, ok := desiredTags[t]
 
-		// Entry isn't in src, it has been deleted.
+		// Entry isn't in desiredTags, it has been deleted.
 		if !ok {
 			// Cast v to a string here. This should be fine, tags are always
 			// strings.
@@ -153,22 +153,22 @@ func tagsChanged(annotation map[string]interface{}, src map[string]string) (bool
 		}
 	}
 
-	// Loop over src, checking for entries in annotation.
+	// Loop over desiredTags, checking for entries in currentTags.
 	//
-	// If an entry is in src, but not annotation, it has been created since
-	// last time.
+	// If an entry is in desiredTags, but not currentTags, it has been created since
+	// last time, or some external entity deleted it.
 	//
-	// If an entry is in both src and annotation, we compare their values, if
-	// the value in src differs from that in annotation, the tag has been
-	// updated since last time.
-	for t, v := range src {
-		av, ok := annotation[t]
+	// If an entry is in both desiredTags and currentTags, we compare their values, if
+	// the value in desiredTags differs from that in currentTags, the tag has been
+	// updated since last time or some external entity modified it.
+	for t, v := range desiredTags {
+		av, ok := currentTags[t]
 
-		// Entries in the src always need to be noted in the newAnnotation. We
+		// Entries in the desiredTags always need to be noted in the newAnnotation. We
 		// know they're going to be created or updated.
 		newAnnotation[t] = v
 
-		// Entry isn't in annotation, it's new.
+		// Entry isn't in desiredTags, it's new.
 		if !ok {
 			createdOrUpdated[t] = v
 			newAnnotation[t] = v
@@ -176,17 +176,17 @@ func tagsChanged(annotation map[string]interface{}, src map[string]string) (bool
 			continue
 		}
 
-		// Entry is in annotation, has the value changed?
-		if v != av {
+		// Entry is in desiredTags, has the value changed?
+		if v != *av {
 			createdOrUpdated[t] = v
 			changed = true
 		}
 
-		// Entry existed in both src and annotation, and their values were
+		// Entry existed in both desiredTags and desiredTags, and their values were
 		// equal. Nothing to do.
 	}
 
-	// We made it through the loop, and everything that was in src, was also
+	// We made it through the loop, and everything that was in desiredTags, was also
 	// in dst. Nothing changed.
 	return changed, createdOrUpdated, deleted, newAnnotation
 }

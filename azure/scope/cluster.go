@@ -837,14 +837,8 @@ func (s *ClusterScope) SetAnnotation(key, value string) {
 func (s *ClusterScope) TagsSpecs() []azure.TagsSpec {
 	return []azure.TagsSpec{
 		{
-			Scope: azure.ResourceGroupID(s.SubscriptionID(), s.ResourceGroup()),
-			Tags: infrav1.Build(infrav1.BuildParams{
-				ClusterName: s.ClusterName(),
-				Lifecycle:   infrav1.ResourceLifecycleOwned,
-				Name:        to.StringPtr(s.ResourceGroup()),
-				Role:        to.StringPtr(infrav1.CommonRole),
-				Additional:  s.AdditionalTags(),
-			}),
+			Scope:      azure.ResourceGroupID(s.SubscriptionID(), s.ResourceGroup()),
+			Tags:       s.AdditionalTags(),
 			Annotation: infrav1.RGTagsLastAppliedAnnotation,
 		},
 	}

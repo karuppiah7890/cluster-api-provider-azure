@@ -270,19 +270,23 @@ func TestTagsChanged(t *testing.T) {
 	g := NewWithT(t)
 
 	var tests = map[string]struct {
-		annotation               map[string]interface{}
-		src                      map[string]string
+		lastAppliedTags          map[string]interface{}
+		desiredTags              map[string]string
+		currentTags              map[string]*string
 		expectedResult           bool
 		expectedCreatedOrUpdated map[string]string
 		expectedDeleted          map[string]string
 		expectedNewAnnotations   map[string]interface{}
 	}{
 		"tags are the same": {
-			annotation: map[string]interface{}{
+			lastAppliedTags: map[string]interface{}{
 				"foo": "hello",
 			},
-			src: map[string]string{
+			desiredTags: map[string]string{
 				"foo": "hello",
+			},
+			currentTags: map[string]*string{
+				"foo": to.StringPtr("hello"),
 			},
 			expectedResult:           false,
 			expectedCreatedOrUpdated: map[string]string{},
@@ -291,11 +295,14 @@ func TestTagsChanged(t *testing.T) {
 				"foo": "hello",
 			},
 		}, "tag value changed": {
-			annotation: map[string]interface{}{
+			lastAppliedTags: map[string]interface{}{
 				"foo": "hello",
 			},
-			src: map[string]string{
+			desiredTags: map[string]string{
 				"foo": "goodbye",
+			},
+			currentTags: map[string]*string{
+				"foo": to.StringPtr("hello"),
 			},
 			expectedResult: true,
 			expectedCreatedOrUpdated: map[string]string{
@@ -306,10 +313,13 @@ func TestTagsChanged(t *testing.T) {
 				"foo": "goodbye",
 			},
 		}, "tag deleted": {
-			annotation: map[string]interface{}{
+			lastAppliedTags: map[string]interface{}{
 				"foo": "hello",
 			},
-			src:                      map[string]string{},
+			desiredTags: map[string]string{},
+			currentTags: map[string]*string{
+				"foo": to.StringPtr("hello"),
+			},
 			expectedResult:           true,
 			expectedCreatedOrUpdated: map[string]string{},
 			expectedDeleted: map[string]string{
@@ -317,12 +327,15 @@ func TestTagsChanged(t *testing.T) {
 			},
 			expectedNewAnnotations: map[string]interface{}{},
 		}, "tag created": {
-			annotation: map[string]interface{}{
+			lastAppliedTags: map[string]interface{}{
 				"foo": "hello",
 			},
-			src: map[string]string{
+			desiredTags: map[string]string{
 				"foo": "hello",
 				"bar": "welcome",
+			},
+			currentTags: map[string]*string{
+				"foo": to.StringPtr("hello"),
 			},
 			expectedResult: true,
 			expectedCreatedOrUpdated: map[string]string{
@@ -334,11 +347,14 @@ func TestTagsChanged(t *testing.T) {
 				"bar": "welcome",
 			},
 		}, "tag deleted and another created": {
-			annotation: map[string]interface{}{
+			lastAppliedTags: map[string]interface{}{
 				"foo": "hello",
 			},
-			src: map[string]string{
+			desiredTags: map[string]string{
 				"bar": "welcome",
+			},
+			currentTags: map[string]*string{
+				"foo": to.StringPtr("hello"),
 			},
 			expectedResult: true,
 			expectedCreatedOrUpdated: map[string]string{
@@ -350,12 +366,58 @@ func TestTagsChanged(t *testing.T) {
 			expectedNewAnnotations: map[string]interface{}{
 				"bar": "welcome",
 			},
+		},
+		"current tags removed by external entity": {
+			lastAppliedTags: map[string]interface{}{
+				"foo": "hello",
+				"bar": "welcome",
+			},
+			desiredTags: map[string]string{
+				"foo": "hello",
+				"bar": "welcome",
+			},
+			currentTags: map[string]*string{
+				"foo": to.StringPtr("hello"),
+			},
+			expectedResult: true,
+			expectedCreatedOrUpdated: map[string]string{
+				"bar": "welcome",
+			},
+			expectedDeleted: map[string]string{},
+			expectedNewAnnotations: map[string]interface{}{
+				"foo": "hello",
+				"bar": "welcome",
+			},
+		},
+		"current tags modified by external entity": {
+			lastAppliedTags: map[string]interface{}{
+				"foo": "hello",
+				"bar": "welcome",
+			},
+			desiredTags: map[string]string{
+				"foo": "hello",
+				"bar": "welcome",
+			},
+			currentTags: map[string]*string{
+				"foo": to.StringPtr("hello"),
+				"bar": to.StringPtr("random"),
+			},
+			expectedResult: true,
+			expectedCreatedOrUpdated: map[string]string{
+				"bar": "welcome",
+			},
+			expectedDeleted: map[string]string{},
+			expectedNewAnnotations: map[string]interface{}{
+				"foo": "hello",
+				"bar": "welcome",
+			},
 		}}
 
 	for name, test := range tests {
+		test := test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			changed, createdOrUpdated, deleted, newAnnotation := tagsChanged(test.annotation, test.src)
+			changed, createdOrUpdated, deleted, newAnnotation := tagsChanged(test.lastAppliedTags, test.desiredTags, test.currentTags)
 			g.Expect(changed).To(Equal(test.expectedResult))
 			g.Expect(createdOrUpdated).To(Equal(test.expectedCreatedOrUpdated))
 			g.Expect(deleted).To(Equal(test.expectedDeleted))
