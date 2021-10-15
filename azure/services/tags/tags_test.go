@@ -50,7 +50,6 @@ func TestReconcileTags(t *testing.T) {
 						{
 							Scope: "/sub/123/fake/scope",
 							Tags: map[string]string{
-								"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned",
 								"foo":   "bar",
 								"thing": "stuff",
 							},
@@ -59,7 +58,6 @@ func TestReconcileTags(t *testing.T) {
 						{
 							Scope: "/sub/123/other/scope",
 							Tags: map[string]string{
-								"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned",
 								"tag1": "value1",
 							},
 							Annotation: "my-annotation-2",
@@ -68,6 +66,7 @@ func TestReconcileTags(t *testing.T) {
 					m.GetAtScope(gomockinternal.AContext(), "/sub/123/fake/scope").Return(resources.TagsResource{Properties: &resources.Tags{
 						Tags: map[string]*string{
 							"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": to.StringPtr("owned"),
+							"externalSystemTag": to.StringPtr("randomValue"),
 						},
 					}}, nil),
 					s.AnnotationJSON("my-annotation"),
@@ -75,16 +74,16 @@ func TestReconcileTags(t *testing.T) {
 						Operation: "Merge",
 						Properties: &resources.Tags{
 							Tags: map[string]*string{
-								"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": to.StringPtr("owned"),
 								"foo":   to.StringPtr("bar"),
 								"thing": to.StringPtr("stuff"),
 							},
 						},
 					}),
-					s.UpdateAnnotationJSON("my-annotation", map[string]interface{}{"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned", "foo": "bar", "thing": "stuff"}),
+					s.UpdateAnnotationJSON("my-annotation", map[string]interface{}{"foo": "bar", "thing": "stuff"}),
 					m.GetAtScope(gomockinternal.AContext(), "/sub/123/other/scope").Return(resources.TagsResource{Properties: &resources.Tags{
 						Tags: map[string]*string{
 							"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": to.StringPtr("owned"),
+							"externalSystem2Tag": to.StringPtr("randomValue2"),
 						},
 					}}, nil),
 					s.AnnotationJSON("my-annotation-2"),
@@ -92,12 +91,11 @@ func TestReconcileTags(t *testing.T) {
 						Operation: "Merge",
 						Properties: &resources.Tags{
 							Tags: map[string]*string{
-								"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": to.StringPtr("owned"),
 								"tag1": to.StringPtr("value1"),
 							},
 						},
 					}),
-					s.UpdateAnnotationJSON("my-annotation-2", map[string]interface{}{"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned", "tag1": "value1"}),
+					s.UpdateAnnotationJSON("my-annotation-2", map[string]interface{}{"tag1": "value1"}),
 				)
 			},
 		},
@@ -111,7 +109,6 @@ func TestReconcileTags(t *testing.T) {
 					{
 						Scope: "/sub/123/fake/scope",
 						Tags: map[string]string{
-							"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned",
 							"foo":   "bar",
 							"thing": "stuff",
 						},
@@ -132,7 +129,6 @@ func TestReconcileTags(t *testing.T) {
 						{
 							Scope: "/sub/123/fake/scope",
 							Tags: map[string]string{
-								"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned",
 								"foo": "bar",
 							},
 							Annotation: "my-annotation",
@@ -145,7 +141,7 @@ func TestReconcileTags(t *testing.T) {
 							"thing": to.StringPtr("stuff"),
 						},
 					}}, nil),
-					s.AnnotationJSON("my-annotation").Return(map[string]interface{}{"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned", "foo": "bar", "thing": "stuff"}, nil),
+					s.AnnotationJSON("my-annotation").Return(map[string]interface{}{"foo": "bar", "thing": "stuff"}, nil),
 					m.UpdateAtScope(gomockinternal.AContext(), "/sub/123/fake/scope", resources.TagsPatchResource{
 						Operation: "Delete",
 						Properties: &resources.Tags{
@@ -154,7 +150,7 @@ func TestReconcileTags(t *testing.T) {
 							},
 						},
 					}),
-					s.UpdateAnnotationJSON("my-annotation", map[string]interface{}{"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned", "foo": "bar"}),
+					s.UpdateAnnotationJSON("my-annotation", map[string]interface{}{"foo": "bar"}),
 				)
 			},
 		},
@@ -168,7 +164,6 @@ func TestReconcileTags(t *testing.T) {
 					{
 						Scope: "/sub/123/fake/scope",
 						Tags: map[string]string{
-							"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned",
 							"foo":   "bar",
 							"thing": "stuff",
 						},
@@ -188,7 +183,6 @@ func TestReconcileTags(t *testing.T) {
 					{
 						Scope: "/sub/123/fake/scope",
 						Tags: map[string]string{
-							"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned",
 							"key": "value",
 						},
 						Annotation: "my-annotation",
@@ -204,7 +198,6 @@ func TestReconcileTags(t *testing.T) {
 					Operation: "Merge",
 					Properties: &resources.Tags{
 						Tags: map[string]*string{
-							"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": to.StringPtr("owned"),
 							"key": to.StringPtr("value"),
 						},
 					},
@@ -221,7 +214,6 @@ func TestReconcileTags(t *testing.T) {
 					{
 						Scope: "/sub/123/fake/scope",
 						Tags: map[string]string{
-							"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned",
 							"key": "value",
 						},
 						Annotation: "my-annotation",
@@ -233,7 +225,7 @@ func TestReconcileTags(t *testing.T) {
 						"key": to.StringPtr("value"),
 					},
 				}}, nil)
-				s.AnnotationJSON("my-annotation").Return(map[string]interface{}{"sigs.k8s.io_cluster-api-provider-azure_cluster_test-cluster": "owned", "key": "value"}, nil)
+				s.AnnotationJSON("my-annotation").Return(map[string]interface{}{"key": "value"}, nil)
 			},
 		},
 	}
