@@ -128,6 +128,8 @@ func TestDeleteDisk(t *testing.T) {
 	}
 }
 
+// TODO(karuppiah7890): Check if this test has to be present here or if it can be moved to
+// `azure/scope/machine_test.go` as this test tests MachineScope.DiskSpecs method in MachineScope
 func TestDiskSpecs(t *testing.T) {
 	testcases := []struct {
 		name                   string
@@ -179,7 +181,8 @@ func TestDiskSpecs(t *testing.T) {
 					Name: "my-azure-machine_otherdisk",
 				},
 			},
-		}}
+		},
+	}
 	for _, tc := range testcases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
