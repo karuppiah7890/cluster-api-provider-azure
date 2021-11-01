@@ -24,7 +24,9 @@ import (
 	context "context"
 	reflect "reflect"
 
+	azure "github.com/Azure/go-autorest/autorest/azure"
 	gomock "github.com/golang/mock/gomock"
+	azure0 "sigs.k8s.io/cluster-api-provider-azure/azure"
 )
 
 // Mockclient is a mock of client interface.
@@ -62,4 +64,34 @@ func (m *Mockclient) Delete(arg0 context.Context, arg1, arg2 string) error {
 func (mr *MockclientMockRecorder) Delete(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*Mockclient)(nil).Delete), arg0, arg1, arg2)
+}
+
+// DeleteAsync mocks base method.
+func (m *Mockclient) DeleteAsync(arg0 context.Context, arg1 azure0.ResourceSpecGetter) (azure.FutureAPI, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAsync", arg0, arg1)
+	ret0, _ := ret[0].(azure.FutureAPI)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteAsync indicates an expected call of DeleteAsync.
+func (mr *MockclientMockRecorder) DeleteAsync(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAsync", reflect.TypeOf((*Mockclient)(nil).DeleteAsync), arg0, arg1)
+}
+
+// IsDone mocks base method.
+func (m *Mockclient) IsDone(arg0 context.Context, arg1 azure.FutureAPI) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsDone", arg0, arg1)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsDone indicates an expected call of IsDone.
+func (mr *MockclientMockRecorder) IsDone(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsDone", reflect.TypeOf((*Mockclient)(nil).IsDone), arg0, arg1)
 }

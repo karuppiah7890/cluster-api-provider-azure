@@ -21,6 +21,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2021-04-01/compute"
 	"github.com/Azure/go-autorest/autorest"
+	azureautorest "github.com/Azure/go-autorest/autorest/azure"
 	"sigs.k8s.io/cluster-api-provider-azure/azure"
 	"sigs.k8s.io/cluster-api-provider-azure/util/tele"
 )
@@ -28,6 +29,8 @@ import (
 // Client wraps go-sdk.
 type client interface {
 	Delete(context.Context, string, string) error
+	DeleteAsync(context.Context, azure.ResourceSpecGetter) (azureautorest.FutureAPI, error)
+	IsDone(context.Context, azureautorest.FutureAPI) (bool, error)
 }
 
 // AzureClient contains the Azure go-sdk Client.
@@ -65,4 +68,18 @@ func (ac *azureClient) Delete(ctx context.Context, resourceGroupName, name strin
 	}
 	_, err = future.Result(ac.disks)
 	return err
+}
+
+// DeleteAsync deletes the specified disk asynchronously. DeleteAsync sends a DELETE
+// request to Azure and if accepted without error, the func will return a Future which can be used to track the ongoing
+// progress of the operation.
+func (ac *azureClient) DeleteAsync(ctx context.Context, spec azure.ResourceSpecGetter) (azureautorest.FutureAPI, error) {
+	// TODO(karuppiah7890): Implement this method
+	return nil, nil
+}
+
+// IsDone returns true if the long-running operation has completed.
+func (ac *azureClient) IsDone(ctx context.Context, future azureautorest.FutureAPI) (bool, error) {
+	// TODO(karuppiah7890): Implement this method
+	return false, nil
 }

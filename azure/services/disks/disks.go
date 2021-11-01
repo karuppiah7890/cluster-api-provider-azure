@@ -20,16 +20,19 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
-	"github.com/pkg/errors"
+	// "github.com/pkg/errors"
 
 	"sigs.k8s.io/cluster-api-provider-azure/azure"
 	"sigs.k8s.io/cluster-api-provider-azure/util/tele"
 )
 
+const serviceName = "disks"
+
 // DiskScope defines the scope interface for a disk service.
 type DiskScope interface {
 	logr.Logger
 	azure.ClusterDescriber
+	azure.AsyncStatusUpdater
 	DiskSpecs() []azure.DiskSpec
 }
 
@@ -63,18 +66,9 @@ func (s *Service) Delete(ctx context.Context) error {
 	// TODO(karuppiah7890): I'm assuming that all the disk specs from DiskSpecs() are managed disks as they
 	// belong to managed VMs. So I'm assuming we don't have to do any checks to see if a disk is managed or not.
 	// Verify these assumptions!
-	for _, diskSpec := range s.Scope.DiskSpecs() {
-		s.Scope.V(2).Info("deleting disk", "disk", diskSpec.Name)
-		err := s.client.Delete(ctx, s.Scope.ResourceGroup(), diskSpec.Name)
-		if err != nil && azure.ResourceNotFound(err) {
-			// already deleted
-			continue
-		}
-		if err != nil {
-			return errors.Wrapf(err, "failed to delete disk %s in resource group %s", diskSpec.Name, s.Scope.ResourceGroup())
-		}
-
-		s.Scope.V(2).Info("successfully deleted disk", "disk", diskSpec.Name)
-	}
+	// TODO(karuppiah7890): Implement this part - the for loop with error handling etc along with tests
+	// for _, diskSpec := range s.Scope.DiskSpecs() {
+	// async.DeleteResource(ctx, s.Scope, s.client, diskSpec, serviceName)
+	// }
 	return nil
 }
