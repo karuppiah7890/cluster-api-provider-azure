@@ -26,7 +26,6 @@ import (
 	. "github.com/onsi/gomega"
 	"k8s.io/klog/v2/klogr"
 
-	"sigs.k8s.io/cluster-api-provider-azure/azure"
 	"sigs.k8s.io/cluster-api-provider-azure/azure/services/disks/mock_disks"
 	gomockinternal "sigs.k8s.io/cluster-api-provider-azure/internal/test/matchers/gomock"
 )
@@ -42,7 +41,7 @@ func TestDeleteDisk(t *testing.T) {
 			expectedError: "",
 			expect: func(s *mock_disks.MockDiskScopeMockRecorder, m *mock_disks.MockclientMockRecorder) {
 				s.V(gomock.AssignableToTypeOf(2)).AnyTimes().Return(klogr.New())
-				s.DiskSpecs().Return([]azure.DiskSpec{
+				s.DiskSpecs().Return([]DiskSpec{
 					{
 						Name: "my-disk-1",
 					},
@@ -60,7 +59,7 @@ func TestDeleteDisk(t *testing.T) {
 			expectedError: "",
 			expect: func(s *mock_disks.MockDiskScopeMockRecorder, m *mock_disks.MockclientMockRecorder) {
 				s.V(gomock.AssignableToTypeOf(2)).AnyTimes().Return(klogr.New())
-				s.DiskSpecs().Return([]azure.DiskSpec{
+				s.DiskSpecs().Return([]DiskSpec{
 					{
 						Name: "my-disk-1",
 					},
@@ -78,7 +77,7 @@ func TestDeleteDisk(t *testing.T) {
 			expectedError: "failed to delete disk my-disk-1 in resource group my-rg: #: Internal Server Error: StatusCode=500",
 			expect: func(s *mock_disks.MockDiskScopeMockRecorder, m *mock_disks.MockclientMockRecorder) {
 				s.V(gomock.AssignableToTypeOf(2)).AnyTimes().Return(klogr.New())
-				s.DiskSpecs().Return([]azure.DiskSpec{
+				s.DiskSpecs().Return([]DiskSpec{
 					{
 						Name: "my-disk-1",
 					},

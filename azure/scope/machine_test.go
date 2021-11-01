@@ -33,6 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/cluster-api-provider-azure/azure"
+	"sigs.k8s.io/cluster-api-provider-azure/azure/services/disks"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
 	infrav1 "sigs.k8s.io/cluster-api-provider-azure/api/v1beta1"
@@ -1737,12 +1738,12 @@ func TestDiskSpecs(t *testing.T) {
 	testcases := []struct {
 		name                   string
 		azureMachineModifyFunc func(*infrav1.AzureMachine)
-		expectedDisks          []azure.DiskSpec
+		expectedDisks          []disks.DiskSpec
 	}{
 		{
 			name:                   "only os disk",
 			azureMachineModifyFunc: func(m *infrav1.AzureMachine) {},
-			expectedDisks: []azure.DiskSpec{
+			expectedDisks: []disks.DiskSpec{
 				{
 					Name: "my-azure-machine_OSDisk",
 				},
@@ -1754,7 +1755,7 @@ func TestDiskSpecs(t *testing.T) {
 					NameSuffix: "etcddisk",
 				}}
 			},
-			expectedDisks: []azure.DiskSpec{
+			expectedDisks: []disks.DiskSpec{
 				{
 					Name: "my-azure-machine_OSDisk",
 				},
@@ -1773,7 +1774,7 @@ func TestDiskSpecs(t *testing.T) {
 						NameSuffix: "otherdisk",
 					}}
 			},
-			expectedDisks: []azure.DiskSpec{
+			expectedDisks: []disks.DiskSpec{
 				{
 					Name: "my-azure-machine_OSDisk",
 				},

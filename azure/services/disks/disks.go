@@ -33,7 +33,7 @@ type DiskScope interface {
 	logr.Logger
 	azure.ClusterDescriber
 	azure.AsyncStatusUpdater
-	DiskSpecs() []azure.DiskSpec
+	DiskSpecs() []azure.ResourceSpecGetter
 }
 
 // Service provides operations on Azure resources.
