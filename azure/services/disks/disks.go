@@ -60,6 +60,9 @@ func (s *Service) Delete(ctx context.Context) error {
 	ctx, _, done := tele.StartSpanWithLogger(ctx, "disks.Service.Delete")
 	defer done()
 
+	// TODO(karuppiah7890): I'm assuming that all the disk specs from DiskSpecs() are managed disks as they
+	// belong to managed VMs. So I'm assuming we don't have to do any checks to see if a disk is managed or not.
+	// Verify these assumptions!
 	for _, diskSpec := range s.Scope.DiskSpecs() {
 		s.Scope.V(2).Info("deleting disk", "disk", diskSpec.Name)
 		err := s.client.Delete(ctx, s.Scope.ResourceGroup(), diskSpec.Name)
