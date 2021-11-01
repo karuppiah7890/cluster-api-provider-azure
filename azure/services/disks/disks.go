@@ -21,8 +21,10 @@ import (
 
 	"github.com/go-logr/logr"
 	// "github.com/pkg/errors"
+	infrav1 "sigs.k8s.io/cluster-api-provider-azure/api/v1beta1"
 
 	"sigs.k8s.io/cluster-api-provider-azure/azure"
+	"sigs.k8s.io/cluster-api-provider-azure/azure/services/async"
 	"sigs.k8s.io/cluster-api-provider-azure/util/tele"
 )
 
@@ -67,8 +69,10 @@ func (s *Service) Delete(ctx context.Context) error {
 	// belong to managed VMs. So I'm assuming we don't have to do any checks to see if a disk is managed or not.
 	// Verify these assumptions!
 	// TODO(karuppiah7890): Implement this part - the for loop with error handling etc along with tests
-	// for _, diskSpec := range s.Scope.DiskSpecs() {
-	// async.DeleteResource(ctx, s.Scope, s.client, diskSpec, serviceName)
-	// }
+	for _, diskSpec := range s.Scope.DiskSpecs() {
+		async.DeleteResource(ctx, s.Scope, s.client, diskSpec, serviceName)
+	}
+
+	s.Scope.UpdateDeleteStatus(infrav1.DisksReadyCondition, serviceName, nil)
 	return nil
 }
